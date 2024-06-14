@@ -27,6 +27,31 @@ def dynamic_blend(source,target,mask):
 	img_blended=(mask_blured * source + (1 - mask_blured) * target)
 	return img_blended,mask_blured
 
+def controlled_blend(source,target,mask,blend_ratio=0.5,mask_size_h=192,mask_size_w=192,kernel_1_size=11,kernel_2_size=11):
+	mask_blured = get_blend_mask_controlled(mask,mask_size_h=mask_size_h,mask_size_w=mask_size_w,kernel_1_size=kernel_1_size,kernel_2_size=kernel_2_size)
+	mask_blured*=blend_ratio
+	img_blended=(mask_blured * source + (1 - mask_blured) * target)
+	return img_blended,mask_blured
+
+def get_blend_mask_controlled(mask,mask_size_h=192,mask_size_w=192,kernel_1_size=11,kernel_2_size=11):
+	H,W=mask.shape
+	size_h=mask_size_h
+	size_w=mask_size_w
+	mask=cv2.resize(mask,(size_w,size_h))
+	# kernel_1=random.randrange(5,26,2)
+	kernel_1=(kernel_1_size,kernel_1_size)
+	# kernel_2=random.randrange(5,26,2)
+	kernel_2=(kernel_2_size,kernel_2_size)
+	
+	mask_blured = cv2.GaussianBlur(mask, kernel_1, 0)
+	mask_blured = mask_blured/(mask_blured.max())
+	mask_blured[mask_blured<1]=0
+	
+	mask_blured = cv2.GaussianBlur(mask_blured, kernel_2, np.random.randint(5,46))
+	mask_blured = mask_blured/(mask_blured.max())
+	mask_blured = cv2.resize(mask_blured,(W,H))
+	return mask_blured.reshape((mask_blured.shape+(1,)))
+
 def get_blend_mask(mask):
 	H,W=mask.shape
 	size_h=np.random.randint(192,257)
